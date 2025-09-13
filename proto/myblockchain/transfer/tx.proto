@@ -1,0 +1,154 @@
+syntax = "proto3";
+package myblockchain.transfer;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/leonaries/my-blockchain/x/transfer/types";
+
+// Msg defines the Msg service for transfer operations
+service Msg {
+  // SendTokens transfers tokens between accounts
+  rpc SendTokens(MsgSendTokens) returns (MsgSendTokensResponse) {
+    option (google.api.http).post = "/cosmos/transfer/v1beta1/send";
+  };
+  
+  // BatchSend transfers tokens to multiple recipients
+  rpc BatchSend(MsgBatchSend) returns (MsgBatchSendResponse) {
+    option (google.api.http).post = "/cosmos/transfer/v1beta1/batch_send";
+  };
+}
+
+// Query defines the gRPC querier service for transfer queries
+service Query {
+  // TransferHistory queries transfer history for an address
+  rpc TransferHistory(QueryTransferHistoryRequest) returns (QueryTransferHistoryResponse) {
+    option (google.api.http).get = "/cosmos/transfer/v1beta1/history/{address}";
+  };
+  
+  // TransferStats queries transfer statistics
+  rpc TransferStats(QueryTransferStatsRequest) returns (QueryTransferStatsResponse) {
+    option (google.api.http).get = "/cosmos/transfer/v1beta1/stats";
+  };
+}
+
+// MsgSendTokens represents a message to send tokens between accounts
+message MsgSendTokens {
+  // creator is the address sending the tokens
+  string creator = 1;
+  // to_address is the recipient address
+  string to_address = 2;
+  // amount is the amount to send
+  string amount = 3;
+  // denom is the denomination of tokens to send
+  string denom = 4;
+  // memo is an optional message attached to the transfer
+  string memo = 5;
+}
+
+// MsgSendTokensResponse is the response type for the Msg/SendTokens RPC method
+message MsgSendTokensResponse {
+  // tx_hash is the hash of the transfer transaction
+  string tx_hash = 1;
+  // success indicates if the transfer was successful
+  bool success = 2;
+}
+
+// SendEntry represents a single send entry in a batch transfer
+message SendEntry {
+  // to_address is the recipient address
+  string to_address = 1;
+  // amount is the amount to send to this recipient
+  string amount = 2;
+}
+
+// MsgBatchSend represents a message to send tokens to multiple recipients
+message MsgBatchSend {
+  // creator is the address sending the tokens
+  string creator = 1;
+  // sends is the list of recipients and amounts
+  repeated SendEntry sends = 2;
+  // denom is the denomination of tokens to send
+  string denom = 3;
+  // memo is an optional message attached to all transfers
+  string memo = 4;
+}
+
+// MsgBatchSendResponse is the response type for the Msg/BatchSend RPC method
+message MsgBatchSendResponse {
+  // tx_hash is the hash of the batch transfer transaction
+  string tx_hash = 1;
+  // success_count is the number of successful transfers
+  uint32 success_count = 2;
+  // total_count is the total number of attempted transfers
+  uint32 total_count = 3;
+}
+
+// TransferRecord represents a single transfer record
+message TransferRecord {
+  // tx_hash is the transaction hash
+  string tx_hash = 1;
+  // from_address is the sender address
+  string from_address = 2;
+  // to_address is the recipient address
+  string to_address = 3;
+  // amount is the transferred amount
+  string amount = 4;
+  // denom is the denomination
+  string denom = 5;
+  // timestamp is when the transfer occurred
+  int64 timestamp = 6;
+  // block_height is the block height when transfer occurred
+  int64 block_height = 7;
+  // memo is the optional message attached to transfer
+  string memo = 8;
+  // fee is the transaction fee paid
+  string fee = 9;
+}
+
+// QueryTransferHistoryRequest is the request type for transfer history
+message QueryTransferHistoryRequest {
+  // address is the address to get history for
+  string address = 1;
+  // pagination defines an optional pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+  // direction filters by sent/received ("sent", "received", or "all")
+  string direction = 3;
+  // denom filters by token denomination
+  string denom = 4;
+}
+
+// QueryTransferHistoryResponse is the response type for transfer history
+message QueryTransferHistoryResponse {
+  // transfers is the list of transfer records
+  repeated TransferRecord transfers = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryTransferStatsRequest is the request type for transfer statistics
+message QueryTransferStatsRequest {
+  // address is the address to get stats for (optional, if empty gets global stats)
+  string address = 1;
+  // time_range specifies the time range ("24h", "7d", "30d", "all")
+  string time_range = 2;
+}
+
+// QueryTransferStatsResponse is the response type for transfer statistics
+message QueryTransferStatsResponse {
+  // total_transfers is the total number of transfers
+  int64 total_transfers = 1;
+  // total_volume is the total volume transferred
+  string total_volume = 2;
+  // transfers_sent is the number of transfers sent (if address specified)
+  int64 transfers_sent = 3;
+  // transfers_received is the number of transfers received (if address specified)
+  int64 transfers_received = 4;
+  // volume_sent is the total volume sent (if address specified)
+  string volume_sent = 5;
+  // volume_received is the total volume received (if address specified)
+  string volume_received = 6;
+  // unique_counterparts is the number of unique addresses interacted with
+  int64 unique_counterparts = 7;
+}
