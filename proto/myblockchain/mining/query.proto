@@ -1,0 +1,239 @@
+syntax = "proto3";
+package myblockchain.mining;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/leonaries/my-blockchain/x/mining/types";
+
+// Msg defines the Msg service for mining operations
+service Msg {
+  // RegisterMiner registers a new miner
+  rpc RegisterMiner(MsgRegisterMiner) returns (MsgRegisterMinerResponse) {
+    option (google.api.http).post = "/cosmos/mining/v1beta1/register";
+  };
+  
+  // StartMining starts mining for the caller
+  rpc StartMining(MsgStartMining) returns (MsgStartMiningResponse) {
+    option (google.api.http).post = "/cosmos/mining/v1beta1/start";
+  };
+  
+  // StopMining stops mining for the caller
+  rpc StopMining(MsgStopMining) returns (MsgStopMiningResponse) {
+    option (google.api.http).post = "/cosmos/mining/v1beta1/stop";
+  };
+  
+  // UpdateHashRate updates a miner's hash rate
+  rpc UpdateHashRate(MsgUpdateHashRate) returns (MsgUpdateHashRateResponse) {
+    option (google.api.http).post = "/cosmos/mining/v1beta1/update_hashrate";
+  };
+}
+
+// Query defines the gRPC querier service for mining queries
+service Query {
+  // Miner queries miner information by address
+  rpc Miner(QueryMinerRequest) returns (QueryMinerResponse) {
+    option (google.api.http).get = "/cosmos/mining/v1beta1/miner/{address}";
+  };
+  
+  // ListMiners queries all miners with pagination
+  rpc ListMiners(QueryListMinersRequest) returns (QueryListMinersResponse) {
+    option (google.api.http).get = "/cosmos/mining/v1beta1/miners";
+  };
+  
+  // MiningStats queries global mining statistics
+  rpc MiningStats(QueryMiningStatsRequest) returns (QueryMiningStatsResponse) {
+    option (google.api.http).get = "/cosmos/mining/v1beta1/stats";
+  };
+  
+  // MiningDifficulty queries current mining difficulty
+  rpc MiningDifficulty(QueryMiningDifficultyRequest) returns (QueryMiningDifficultyResponse) {
+    option (google.api.http).get = "/cosmos/mining/v1beta1/difficulty";
+  };
+  
+  // MiningRewards queries mining rewards for an address
+  rpc MiningRewards(QueryMiningRewardsRequest) returns (QueryMiningRewardsResponse) {
+    option (google.api.http).get = "/cosmos/mining/v1beta1/rewards/{address}";
+  };
+}
+
+// Miner represents a registered miner in the system
+message Miner {
+  // address is the miner's blockchain address
+  string address = 1;
+  // name is the miner's display name
+  string name = 2;
+  // hash_rate is the miner's hash rate in H/s
+  int64 hash_rate = 3;
+  // total_rewards is the total rewards earned
+  string total_rewards = 4;
+  // blocks_mined is the number of blocks mined
+  int64 blocks_mined = 5;
+  // active indicates if the miner is currently mining
+  bool active = 6;
+  // joined_at is when the miner registered
+  int64 joined_at = 7;
+  // last_active is the last time the miner was active
+  int64 last_active = 8;
+  // mining_power is the miner's percentage of total network hash rate
+  string mining_power = 9;
+}
+
+// MiningReward represents a mining reward entry
+message MiningReward {
+  // block_height is the height of the mined block
+  int64 block_height = 1;
+  // reward_amount is the reward received
+  string reward_amount = 2;
+  // timestamp is when the reward was earned
+  int64 timestamp = 3;
+  // difficulty is the difficulty when the block was mined
+  int64 difficulty = 4;
+}
+
+// MsgRegisterMiner represents a message to register as a miner
+message MsgRegisterMiner {
+  // creator is the address registering as a miner
+  string creator = 1;
+  // name is the display name for the miner
+  string name = 2;
+  // hash_rate is the initial hash rate in H/s
+  int64 hash_rate = 3;
+}
+
+// MsgRegisterMinerResponse is the response for miner registration
+message MsgRegisterMinerResponse {
+  // miner is the registered miner information
+  Miner miner = 1;
+}
+
+// MsgStartMining represents a message to start mining
+message MsgStartMining {
+  // creator is the miner starting mining
+  string creator = 1;
+}
+
+// MsgStartMiningResponse is the response for starting mining
+message MsgStartMiningResponse {
+  // success indicates if mining was started successfully
+  bool success = 1;
+  // message contains additional information
+  string message = 2;
+}
+
+// MsgStopMining represents a message to stop mining
+message MsgStopMining {
+  // creator is the miner stopping mining
+  string creator = 1;
+}
+
+// MsgStopMiningResponse is the response for stopping mining
+message MsgStopMiningResponse {
+  // success indicates if mining was stopped successfully
+  bool success = 1;
+  // message contains additional information
+  string message = 2;
+}
+
+// MsgUpdateHashRate represents a message to update hash rate
+message MsgUpdateHashRate {
+  // creator is the miner updating their hash rate
+  string creator = 1;
+  // new_hash_rate is the new hash rate in H/s
+  int64 new_hash_rate = 2;
+}
+
+// MsgUpdateHashRateResponse is the response for updating hash rate
+message MsgUpdateHashRateResponse {
+  // success indicates if the update was successful
+  bool success = 1;
+  // new_mining_power is the updated mining power percentage
+  string new_mining_power = 2;
+}
+
+// QueryMinerRequest is the request type for querying miner info
+message QueryMinerRequest {
+  // address is the miner's address to query
+  string address = 1;
+}
+
+// QueryMinerResponse is the response type for miner queries
+message QueryMinerResponse {
+  // miner is the requested miner information
+  Miner miner = 1;
+  // found indicates if the miner was found
+  bool found = 2;
+}
+
+// QueryListMinersRequest is the request type for listing miners
+message QueryListMinersRequest {
+  // pagination defines an optional pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  // active_only filters to only return active miners
+  bool active_only = 2;
+  // sort_by specifies sorting criteria ("hash_rate", "rewards", "blocks")
+  string sort_by = 3;
+}
+
+// QueryListMinersResponse is the response type for listing miners
+message QueryListMinersResponse {
+  // miners is the list of miners
+  repeated Miner miners = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryMiningStatsRequest is the request type for mining statistics
+message QueryMiningStatsRequest {}
+
+// QueryMiningStatsResponse is the response type for mining statistics
+message QueryMiningStatsResponse {
+  // total_miners is the total number of registered miners
+  int64 total_miners = 1;
+  // active_miners is the number of currently active miners
+  int64 active_miners = 2;
+  // total_hash_rate is the total network hash rate
+  int64 total_hash_rate = 3;
+  // total_rewards_distributed is the total rewards distributed
+  string total_rewards_distributed = 4;
+  // current_difficulty is the current mining difficulty
+  int64 current_difficulty = 5;
+  // blocks_mined_today is the number of blocks mined in the last 24 hours
+  int64 blocks_mined_today = 6;
+  // average_block_time is the average time between blocks (in seconds)
+  int64 average_block_time = 7;
+}
+
+// QueryMiningDifficultyRequest is the request type for mining difficulty
+message QueryMiningDifficultyRequest {}
+
+// QueryMiningDifficultyResponse is the response type for mining difficulty
+message QueryMiningDifficultyResponse {
+  // current_difficulty is the current mining difficulty
+  int64 current_difficulty = 1;
+  // target_block_time is the target time between blocks (in seconds)
+  int64 target_block_time = 2;
+  // last_adjustment is when the difficulty was last adjusted
+  int64 last_adjustment = 3;
+  // next_adjustment_height is when the next difficulty adjustment will occur
+  int64 next_adjustment_height = 4;
+}
+
+// QueryMiningRewardsRequest is the request type for mining rewards
+message QueryMiningRewardsRequest {
+  // address is the miner's address to query rewards for
+  string address = 1;
+  // pagination defines an optional pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+// QueryMiningRewardsResponse is the response type for mining rewards
+message QueryMiningRewardsResponse {
+  // rewards is the list of mining rewards
+  repeated MiningReward rewards = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+  // total_rewards is the sum of all rewards
+  string total_rewards = 3;
+}
