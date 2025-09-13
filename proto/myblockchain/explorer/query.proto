@@ -1,0 +1,280 @@
+syntax = "proto3";
+package myblockchain.explorer;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/leonaries/my-blockchain/x/explorer/types";
+
+// Query defines the gRPC querier service for blockchain explorer functionality
+service Query {
+  // CurrentHeight queries the current block height
+  rpc CurrentHeight(QueryCurrentHeightRequest) returns (QueryCurrentHeightResponse) {
+    option (google.api.http).get = "/cosmos/explorer/v1beta1/height";
+  };
+  
+  // BlockInfo queries block information by height
+  rpc BlockInfo(QueryBlockInfoRequest) returns (QueryBlockInfoResponse) {
+    option (google.api.http).get = "/cosmos/explorer/v1beta1/block/{height}";
+  };
+  
+  // LatestBlocks queries the most recent blocks
+  rpc LatestBlocks(QueryLatestBlocksRequest) returns (QueryLatestBlocksResponse) {
+    option (google.api.http).get = "/cosmos/explorer/v1beta1/blocks/latest";
+  };
+  
+  // TransactionInfo queries transaction information by hash
+  rpc TransactionInfo(QueryTransactionInfoRequest) returns (QueryTransactionInfoResponse) {
+    option (google.api.http).get = "/cosmos/explorer/v1beta1/tx/{hash}";
+  };
+  
+  // TransactionsByBlock queries all transactions in a specific block
+  rpc TransactionsByBlock(QueryTransactionsByBlockRequest) returns (QueryTransactionsByBlockResponse) {
+    option (google.api.http).get = "/cosmos/explorer/v1beta1/block/{height}/txs";
+  };
+  
+  // NetworkStatus queries comprehensive network status
+  rpc NetworkStatus(QueryNetworkStatusRequest) returns (QueryNetworkStatusResponse) {
+    option (google.api.http).get = "/cosmos/explorer/v1beta1/status";
+  };
+  
+  // ValidatorSet queries the current validator set
+  rpc ValidatorSet(QueryValidatorSetRequest) returns (QueryValidatorSetResponse) {
+    option (google.api.http).get = "/cosmos/explorer/v1beta1/validators";
+  };
+  
+  // SearchAddress queries information about a specific address
+  rpc SearchAddress(QuerySearchAddressRequest) returns (QuerySearchAddressResponse) {
+    option (google.api.http).get = "/cosmos/explorer/v1beta1/address/{address}";
+  };
+}
+
+// BlockInfo represents detailed information about a block
+message BlockInfo {
+  // height is the block height
+  int64 height = 1;
+  // hash is the block hash
+  string hash = 2;
+  // previous_hash is the hash of the previous block
+  string previous_hash = 3;
+  // timestamp is when the block was created (Unix timestamp)
+  int64 timestamp = 4;
+  // num_transactions is the number of transactions in the block
+  int32 num_transactions = 5;
+  // proposer is the validator address that proposed the block
+  string proposer = 6;
+  // proposer_name is the moniker of the proposer (if available)
+  string proposer_name = 7;
+  // size is the block size in bytes
+  int64 size = 8;
+  // gas_used is the total gas used by all transactions in the block
+  int64 gas_used = 9;
+  // gas_limit is the maximum gas allowed for the block
+  int64 gas_limit = 10;
+  // rewards is the block rewards distributed
+  string rewards = 11;
+}
+
+// TransactionInfo represents detailed information about a transaction
+message TransactionInfo {
+  // hash is the transaction hash
+  string hash = 1;
+  // height is the block height containing this transaction
+  int64 height = 2;
+  // timestamp is when the transaction was included
+  int64 timestamp = 3;
+  // from_address is the sender address
+  string from_address = 4;
+  // to_address is the recipient address (if applicable)
+  string to_address = 5;
+  // amount is the amount transferred (if applicable)
+  string amount = 6;
+  // denom is the denomination (if applicable)
+  string denom = 7;
+  // fee is the transaction fee paid
+  string fee = 8;
+  // gas_used is the gas consumed by the transaction
+  int64 gas_used = 9;
+  // gas_limit is the gas limit set for the transaction
+  int64 gas_limit = 10;
+  // status indicates if the transaction was successful
+  string status = 11;
+  // memo is the optional memo attached to the transaction
+  string memo = 12;
+  // message_type is the type of message (e.g., "send", "delegate")
+  string message_type = 13;
+  // raw_log contains the raw transaction log
+  string raw_log = 14;
+}
+
+// NetworkStatus represents comprehensive network information
+message NetworkStatus {
+  // latest_block_height is the height of the most recent block
+  int64 latest_block_height = 1;
+  // latest_block_time is the timestamp of the most recent block
+  int64 latest_block_time = 2;
+  // chain_id is the blockchain network identifier
+  string chain_id = 3;
+  // num_validators is the total number of validators
+  int32 num_validators = 4;
+  // active_validators is the number of currently active validators
+  int32 active_validators = 5;
+  // num_peers is the number of connected peers
+  int32 num_peers = 6;
+  // catching_up indicates if the node is syncing
+  bool catching_up = 7;
+  // node_version is the version of the blockchain node
+  string node_version = 8;
+  // total_supply is the total token supply
+  repeated TokenSupply total_supply = 9;
+  // avg_block_time is the average time between blocks (seconds)
+  double avg_block_time = 10;
+  // transactions_today is the number of transactions in the last 24h
+  int64 transactions_today = 11;
+  // total_addresses is the total number of addresses that have made transactions
+  int64 total_addresses = 12;
+}
+
+// TokenSupply represents the supply information for a token denomination
+message TokenSupply {
+  // denom is the token denomination
+  string denom = 1;
+  // amount is the total supply amount
+  string amount = 2;
+}
+
+// ValidatorInfo represents information about a validator
+message ValidatorInfo {
+  // address is the validator's operator address
+  string address = 1;
+  // consensus_address is the validator's consensus address
+  string consensus_address = 2;
+  // moniker is the validator's display name
+  string moniker = 3;
+  // voting_power is the validator's voting power
+  string voting_power = 4;
+  // commission is the validator's commission rate
+  string commission = 5;
+  // jailed indicates if the validator is jailed
+  bool jailed = 6;
+  // status indicates the validator status ("bonded", "unbonded", etc.)
+  string status = 7;
+  // uptime is the validator's uptime percentage
+  double uptime = 8;
+  // delegator_shares is the total delegator shares
+  string delegator_shares = 9;
+}
+
+// AddressInfo represents information about a blockchain address
+message AddressInfo {
+  // address is the bech32 address
+  string address = 1;
+  // balances are the token balances for this address
+  repeated TokenBalance balances = 2;
+  // transaction_count is the total number of transactions
+  int64 transaction_count = 3;
+  // first_seen is when this address first appeared on the blockchain
+  int64 first_seen = 4;
+  // last_active is when this address was last active
+  int64 last_active = 5;
+  // is_validator indicates if this address is a validator
+  bool is_validator = 6;
+  // is_contract indicates if this address is a smart contract
+  bool is_contract = 7;
+}
+
+// TokenBalance represents a token balance for an address
+message TokenBalance {
+  // denom is the token denomination
+  string denom = 1;
+  // amount is the balance amount
+  string amount = 2;
+}
+
+// Query request/response messages
+message QueryCurrentHeightRequest {}
+
+message QueryCurrentHeightResponse {
+  // height is the current block height
+  int64 height = 1;
+}
+
+message QueryBlockInfoRequest {
+  // height is the block height to query
+  int64 height = 1;
+}
+
+message QueryBlockInfoResponse {
+  // block is the requested block information
+  BlockInfo block = 1;
+  // found indicates if the block was found
+  bool found = 2;
+}
+
+message QueryLatestBlocksRequest {
+  // limit is the maximum number of blocks to return
+  int32 limit = 1;
+}
+
+message QueryLatestBlocksResponse {
+  // blocks is the list of recent blocks
+  repeated BlockInfo blocks = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryTransactionInfoRequest {
+  // hash is the transaction hash to query
+  string hash = 1;
+}
+
+message QueryTransactionInfoResponse {
+  // transaction is the requested transaction information
+  TransactionInfo transaction = 1;
+  // found indicates if the transaction was found
+  bool found = 2;
+}
+
+message QueryTransactionsByBlockRequest {
+  // height is the block height to get transactions for
+  int64 height = 1;
+  // pagination defines an optional pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryTransactionsByBlockResponse {
+  // transactions is the list of transactions in the block
+  repeated TransactionInfo transactions = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryNetworkStatusRequest {}
+
+message QueryNetworkStatusResponse {
+  // status is the comprehensive network status information
+  NetworkStatus status = 1;
+}
+
+message QueryValidatorSetRequest {
+  // pagination defines an optional pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryValidatorSetResponse {
+  // validators is the list of validators
+  repeated ValidatorInfo validators = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QuerySearchAddressRequest {
+  // address is the address to search for
+  string address = 1;
+}
+
+message QuerySearchAddressResponse {
+  // address_info is the information about the address
+  AddressInfo address_info = 1;
+  // found indicates if the address was found
+  bool found = 2;
+}
