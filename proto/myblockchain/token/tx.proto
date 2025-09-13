@@ -1,0 +1,98 @@
+syntax = "proto3";
+package myblockchain.token;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+
+option go_package = "github.com/leonaries/my-blockchain/x/token/types";
+
+// Msg defines the Msg service for token operations
+service Msg {
+  // MintTokens allows authorized users to mint new tokens
+  rpc MintTokens(MsgMintTokens) returns (MsgMintTokensResponse) {
+    option (google.api.http).post = "/cosmos/token/v1beta1/mint";
+  };
+  
+  // BurnTokens allows users to burn their own tokens
+  rpc BurnTokens(MsgBurnTokens) returns (MsgBurnTokensResponse) {
+    option (google.api.http).post = "/cosmos/token/v1beta1/burn";
+  };
+}
+
+// Query defines the gRPC querier service for token queries
+service Query {
+  // TotalSupply queries the total supply of a specific denomination
+  rpc TotalSupply(QueryTotalSupplyRequest) returns (QueryTotalSupplyResponse) {
+    option (google.api.http).get = "/cosmos/token/v1beta1/total_supply/{denom}";
+  };
+  
+  // Params queries all parameters of the token module
+  rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
+    option (google.api.http).get = "/cosmos/token/v1beta1/params";
+  };
+}
+
+// MsgMintTokens represents a message to mint new tokens
+message MsgMintTokens {
+  // creator is the address of the transaction signer
+  string creator = 1;
+  // amount is the amount of tokens to mint
+  string amount = 2;
+  // denom is the denomination of the tokens to mint
+  string denom = 3;
+  // recipient is the address to receive the minted tokens (optional, defaults to creator)
+  string recipient = 4;
+}
+
+// MsgMintTokensResponse is the response type for the Msg/MintTokens RPC method
+message MsgMintTokensResponse {
+  // amount is the amount of tokens that were actually minted
+  string amount = 1;
+}
+
+// MsgBurnTokens represents a message to burn tokens
+message MsgBurnTokens {
+  // creator is the address of the transaction signer
+  string creator = 1;
+  // amount is the amount of tokens to burn
+  string amount = 2;
+  // denom is the denomination of the tokens to burn
+  string denom = 3;
+}
+
+// MsgBurnTokensResponse is the response type for the Msg/BurnTokens RPC method
+message MsgBurnTokensResponse {
+  // amount is the amount of tokens that were actually burned
+  string amount = 1;
+}
+
+// QueryTotalSupplyRequest is the request type for the Query/TotalSupply RPC method
+message QueryTotalSupplyRequest {
+  // denom is the denomination to query the total supply for
+  string denom = 1;
+}
+
+// QueryTotalSupplyResponse is the response type for the Query/TotalSupply RPC method
+message QueryTotalSupplyResponse {
+  // total_supply is the total supply of the denomination
+  string total_supply = 1;
+  // denom is the denomination that was queried
+  string denom = 2;
+}
+
+// QueryParamsRequest is request type for the Query/Params RPC method
+message QueryParamsRequest {}
+
+// QueryParamsResponse is response type for the Query/Params RPC method
+message QueryParamsResponse {
+  // params holds all the parameters of this module
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+// Params defines the parameters for the token module
+message Params {
+  // mint_denom defines which denomination can be minted
+  string mint_denom = 1;
+  // max_supply defines the maximum supply allowed for the mint_denom
+  string max_supply = 2;
+}
