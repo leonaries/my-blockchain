@@ -1,0 +1,158 @@
+syntax = "proto3";
+package myblockchain.user;
+
+import "gogoproto/gogo.proto";
+import "google/api/annotations.proto";
+import "cosmos/base/query/v1beta1/pagination.proto";
+
+option go_package = "github.com/leonaries/my-blockchain/x/user/types";
+
+// Msg defines the Msg service for user operations
+service Msg {
+  // CreateUser creates a new user profile
+  rpc CreateUser(MsgCreateUser) returns (MsgCreateUserResponse) {
+    option (google.api.http).post = "/cosmos/user/v1beta1/create";
+  };
+  
+  // UpdateUser updates an existing user profile
+  rpc UpdateUser(MsgUpdateUser) returns (MsgUpdateUserResponse) {
+    option (google.api.http).post = "/cosmos/user/v1beta1/update";
+  };
+  
+  // DeleteUser deactivates a user profile
+  rpc DeleteUser(MsgDeleteUser) returns (MsgDeleteUserResponse) {
+    option (google.api.http).post = "/cosmos/user/v1beta1/delete";
+  };
+}
+
+// Query defines the gRPC querier service for user queries
+service Query {
+  // User queries user information by address
+  rpc User(QueryUserRequest) returns (QueryUserResponse) {
+    option (google.api.http).get = "/cosmos/user/v1beta1/user/{address}";
+  };
+  
+  // ListUsers queries all users with pagination
+  rpc ListUsers(QueryListUsersRequest) returns (QueryListUsersResponse) {
+    option (google.api.http).get = "/cosmos/user/v1beta1/users";
+  };
+  
+  // UserExists checks if a user exists
+  rpc UserExists(QueryUserExistsRequest) returns (QueryUserExistsResponse) {
+    option (google.api.http).get = "/cosmos/user/v1beta1/exists/{address}";
+  };
+}
+
+// User represents a user profile in the system
+message User {
+  // address is the bech32 address of the user
+  string address = 1;
+  // name is the display name of the user
+  string name = 2;
+  // email is the email address of the user
+  string email = 3;
+  // bio is a short biography or description
+  string bio = 4;
+  // avatar_url is the URL to the user's avatar image
+  string avatar_url = 5;
+  // created_at is the unix timestamp when the user was created
+  int64 created_at = 6;
+  // updated_at is the unix timestamp when the user was last updated
+  int64 updated_at = 7;
+  // active indicates if the user profile is active
+  bool active = 8;
+}
+
+// MsgCreateUser represents a message to create a new user
+message MsgCreateUser {
+  // creator is the address creating the user profile
+  string creator = 1;
+  // name is the display name for the user
+  string name = 2;
+  // email is the email address for the user
+  string email = 3;
+  // bio is an optional biography
+  string bio = 4;
+  // avatar_url is an optional avatar image URL
+  string avatar_url = 5;
+}
+
+// MsgCreateUserResponse is the response type for the Msg/CreateUser RPC method
+message MsgCreateUserResponse {
+  // user is the created user profile
+  User user = 1;
+}
+
+// MsgUpdateUser represents a message to update user information
+message MsgUpdateUser {
+  // creator is the address of the user updating their profile
+  string creator = 1;
+  // name is the new display name (optional)
+  string name = 2;
+  // email is the new email address (optional)
+  string email = 3;
+  // bio is the new biography (optional)
+  string bio = 4;
+  // avatar_url is the new avatar URL (optional)
+  string avatar_url = 5;
+}
+
+// MsgUpdateUserResponse is the response type for the Msg/UpdateUser RPC method
+message MsgUpdateUserResponse {
+  // user is the updated user profile
+  User user = 1;
+}
+
+// MsgDeleteUser represents a message to delete/deactivate a user
+message MsgDeleteUser {
+  // creator is the address of the user deleting their profile
+  string creator = 1;
+}
+
+// MsgDeleteUserResponse is the response type for the Msg/DeleteUser RPC method
+message MsgDeleteUserResponse {
+  // success indicates if the deletion was successful
+  bool success = 1;
+}
+
+// QueryUserRequest is the request type for the Query/User RPC method
+message QueryUserRequest {
+  // address is the bech32 address of the user to query
+  string address = 1;
+}
+
+// QueryUserResponse is the response type for the Query/User RPC method
+message QueryUserResponse {
+  // user is the requested user profile
+  User user = 1;
+  // found indicates if the user was found
+  bool found = 2;
+}
+
+// QueryListUsersRequest is the request type for the Query/ListUsers RPC method
+message QueryListUsersRequest {
+  // pagination defines an optional pagination for the request
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+  // active_only filters to only return active users
+  bool active_only = 2;
+}
+
+// QueryListUsersResponse is the response type for the Query/ListUsers RPC method
+message QueryListUsersResponse {
+  // users is the list of user profiles
+  repeated User users = 1 [(gogoproto.nullable) = false];
+  // pagination defines the pagination in the response
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+// QueryUserExistsRequest is the request type for the Query/UserExists RPC method
+message QueryUserExistsRequest {
+  // address is the bech32 address to check
+  string address = 1;
+}
+
+// QueryUserExistsResponse is the response type for the Query/UserExists RPC method
+message QueryUserExistsResponse {
+  // exists indicates if the user exists
+  bool exists = 1;
+}
