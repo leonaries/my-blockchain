@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  my-blockchain:
+    build: .
+    container_name: my-blockchain-node
+    ports:
+      - "26657:26657"  # Tendermint RPC
+      - "26656:26656"  # Tendermint P2P  
+      - "1317:1317"    # Cosmos REST API
+      - "9090:9090"    # gRPC
+    volumes:
+      - blockchain_data:/home/blockchain/.my-blockchain
+    environment:
+      - CHAIN_ID=mychain-1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:26657/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    command: >
+      sh -c "
+        if [ ! -f ~/.my-blockchain/config/genesis.json ]; then
+          echo 'Initializing blockchain...'
+          my-blockchaind init mynode --chain-id mychain-1
+          my-blockchaind keys add alice --keyring-backend test
+          my-blockchaind keys add bob --keyring-backend test
+          my-blockchaind add-genesis-account alice 100000000token --keyring-backend test
+          my-blockchaind add-genesis-account bob 50000000token --keyring-backend test
+          my-blockchaind gentx alice 70000000token --chain-id mychain-1 --keyring-backend test
+          my-blockchaind collect-gentxs
+        fi
+        echo 'Starting blockchain node...'
+        my-blockchaind start
+      "
+
+  # Optional: Add a blockchain explorer frontend
+  explorer:
+    image: nginx:alpine
+    container_name: my-blockchain-explorer
+    ports:
+      - "8080:80"
+    volumes:
+      - ./explorer:/usr/share/nginx/html:ro
+    depends_on:
+      - my-blockchain
+    restart: unless-stopped
+
+volumes:
+  blockchain_data:
+    driver: local
+
+networks:
+  default:
+    name: my-blockchain-network
