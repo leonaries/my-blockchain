@@ -1,0 +1,13 @@
+syntax = "proto3";
+package myblockchainnew.myblockchainnew.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "my-blockchain-new/x/myblockchainnew/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "myblockchainnew/x/myblockchainnew/Params";
+  option (gogoproto.equal) = true;
+}
